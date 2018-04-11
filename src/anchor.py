@@ -11,10 +11,15 @@ class AnchorText:
         :param base_size
         :return:
         """
+        
+        ##assert: raise if false.
         assert(self.anchor_num==len(sizes))
+        ##base_anchor:array of 1x4, type of np.int32
         base_anchor=np.array([0, 0, base_size-1, base_size-1], np.int32)
+        ##anchors:all anchors, size(10)x4, type of np.int32
         anchors=np.zeros((len(sizes), 4), np.int32)
         index=0
+        ##create anchors according to h and w in sizes
         for h, w in sizes:
             anchors[index]=self.scale_anchor(base_anchor, h, w)
             index+=1
@@ -33,12 +38,15 @@ class AnchorText:
     def apply_deltas_to_anchors(self, boxes_delta, anchors):
         """
             :return [l t r b]
+            boxes are all the proposla boxes?
         """
+       
         anchor_y_ctr=(anchors[:, 1]+anchors[:, 3])/2.
         anchor_h=anchors[:, 3]-anchors[:, 1]+1.
         global_coords=np.zeros_like(boxes_delta, np.float32)
         global_coords[:, 1]=np.exp(boxes_delta[:, 1])*anchor_h
         global_coords[:, 0]=boxes_delta[:, 0]*anchor_h+anchor_y_ctr-global_coords[:, 1]/2.
+        ##Stack arrays in sequence horizontally (column wise)
         return np.hstack((anchors[:, [0]], global_coords[:, [0]], anchors[:, [2]],
                           global_coords[:, [0]]+global_coords[:, [1]])).astype(np.float32)
 
@@ -64,6 +72,7 @@ class AnchorText:
         for y_ in range(feat_map_size[0]):
             for x_ in range(feat_map_size[1]):
                 shift=np.array([x_, y_, x_, y_])*feat_stride
+                ## from indexth to index+basic_anchors_.shape[0]th all columns
                 anchors[index:index+basic_anchors_.shape[0], :]=basic_anchors_+shift
                 index+=basic_anchors_.shape[0]
         return anchors
